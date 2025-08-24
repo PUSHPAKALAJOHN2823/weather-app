@@ -1,101 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import clearImg from '../assets/clear.png';
-import cloudImg from '../assets/cloud.png';
-import drizzleImg from '../assets/drizzle.png';
-import humidityImg from '../assets/humidity.png';
-import rainImg from '../assets/rain.png';
-import searchIcon from '../assets/search.png';
-import snowImg from '../assets/snow.png';
-import windImg from '../assets/wind.png';
-import './Weather.css';
+import React, { useState } from "react";
+import axios from "axios";
+import bgImg from "../assets/bg.jpeg";
 
 const Weather = () => {
-  const [city, setCity] = useState('');
-  const [weatherData, setWeatherData] = useState(false);
+  const [city, setCity] = useState("");
+  const [weather, setWeather] = useState(null);
 
-  const allIcons = {
-    "01d": clearImg,
-    "01n": clearImg,
-    "02d": cloudImg,
-    "02n": cloudImg,
-    "03d": cloudImg,
-    "03n": cloudImg,
-    "04d": drizzleImg,
-    "04n": drizzleImg,
-    "09d": rainImg,
-    "09n": rainImg,
-    "10d": rainImg,
-    "10n": rainImg,
-    "13d": snowImg,
-    "13n": snowImg,
-  };
-
-  const search = async (cityName) => {
+  const fetchWeather = async () => {
     try {
-      const apiKey = import.meta.env.VITE_APP_ID;
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${apiKey}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      const icon = allIcons[data.weather[0].icon] || clearImg;
-
-      setWeatherData({
-        humidity: data.main.humidity,
-        windSpeed: data.wind.speed,
-        temperature: Math.floor(data.main.temp),
-        location: data.name,
-        icon: icon,
-      });
-    } catch (error) {
-      alert("Failed to fetch weather data");
-      console.error(error);
-      setWeatherData(false);
+      const res = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=16f01dd38ce4a5ade7816b3832b6c1f4&units=metric`
+      );
+      setWeather(res.data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  useEffect(() => {
-    search("Chennai");
-  }, []);
-
   return (
-    <div className='weather'>
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search city..."
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-        />
-        <img
-          src={searchIcon}
-          alt="search"
-          onClick={() => search(city)}
-          style={{ cursor: 'pointer' }}
-        />
-      </div>
+    <div className="relative w-screen h-screen font-['Poppins']">
+      {/* Background */}
+      <img
+        src={bgImg}
+        alt="bg"
+        className="absolute top-0 left-0 w-full h-full object-cover opacity-80 brightness-50"
+      />
 
-      {weatherData && (
-        <>
-          <img src={weatherData.icon} alt="weather-icon" className='weather-icon' />
-          <p className='temp'>{weatherData.temperature}°C</p>
-          <p className='location'>{weatherData.location}</p>
-          <div className='weather-data'>
-            <div className='col'>
-              <img src={humidityImg} alt="humidity" />
-              <div>
-                <p>{weatherData.humidity} %</p>
-                <span>Humidity</span>
-              </div>
-            </div>
-            <div className='col'>
-              <img src={windImg} alt="wind" />
-              <div>
-                <p>{weatherData.windSpeed} km/hr</p>
-                <span>Wind Speed</span>
-              </div>
-            </div>
+      {/* Center Card */}
+      <div className="absolute inset-0 flex justify-center items-center z-50">
+        <div className="w-fit p-8 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-500 rounded-3xl shadow-2xl text-white text-center backdrop-blur-md">
+          {/* Title */}
+          <h1 className="text-6xl font-bold mb-6 tracking-wide drop-shadow-md text-black">
+            🌤️ Weather App
+          </h1>
+
+          {/* Search Box */}
+          <div className="flex gap-2 justify-center mb-6">
+            <input
+              type="text"
+              placeholder="Enter city..."
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="px-6 py-3 rounded-lg text-black w-2/3 outline-none focus:ring-2 focus:ring-purple-400 text-xl"
+            />
+            <button
+              onClick={fetchWeather}
+              className="px-5 py-2 bg-black/40 rounded-lg hover:bg-black/60 transition font-semibold text-xl"
+            >
+              Search
+            </button>
           </div>
-        </>
-      )}
+
+          {/* Weather Report */}
+          {weather && (
+            <div className="mt-6 space-y-3">
+              <h2 className="text-4xl font-semibold text-black">{weather.name}</h2>
+              <p className="text-5xl font-bold text-black">{Math.round(weather.main.temp)}°C</p>
+              <p className="capitalize text-2xl text-black font-semibold opacity-90">
+                {weather.weather[0].description}
+              </p>
+
+              <div className="flex justify-around mt-4 text-sm">
+                <div className="flex flex-col items-center">
+                  <span className="text-6xl">💧</span>
+                  <span className="font-medium text-2xl text-black">{weather.main.humidity}%</span>
+                  <span className="opacity-80 text-2xl text-black">Humidity</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-6xl">💨</span>
+                  <span className="font-medium text-2xl text-black">{weather.wind.speed} m/s</span>
+                  <span className="opacity-80 text-2xl text-black">Wind</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
